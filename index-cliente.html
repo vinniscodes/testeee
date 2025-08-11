@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NowLook - Agendamento Online</title>
+    <link rel="stylesheet" href="style-cliente.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        .leaflet-container {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-container">
+            <div id="login-container" class="auth-form active">
+                <div class="form-header">
+                    <i class="fas fa-user-circle"></i>
+                    <h3>Login</h3>
+                </div>
+                <form id="login-form">
+                    <label for="login-email">E-mail</label>
+                    <input type="email" id="login-email" required>
+                    <label for="login-senha">Senha</label>
+                    <input type="password" id="login-senha" required>
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                    <p>Ainda não tem conta? <a href="#" id="link-cadastro">Cadastre-se</a></p>
+                </form>
+            </div>
+            
+            <div id="cadastro-container" class="auth-form">
+                <div class="form-header">
+                    <i class="fas fa-user-plus"></i>
+                    <h3>Cadastro</h3>
+                </div>
+                <form id="cadastro-form">
+                    <label for="cadastro-nome">Nome Completo</label>
+                    <input type="text" id="cadastro-nome" required>
+                    <label for="cadastro-email">E-mail</label>
+                    <input type="email" id="cadastro-email" required>
+                    <label for="cadastro-telefone">Telefone</label>
+                    <input type="tel" id="cadastro-telefone" required>
+                    <div class="field-group">
+                        <span>Tipo de Cliente</span>
+                        <div class="switch-container">
+                            <input type="checkbox" id="tipo-cliente" class="switch-input">
+                            <label for="tipo-cliente" class="switch-label">
+                                <span class="switch-text">Padrão</span>
+                                <span class="switch-text">Premium</span>
+                            </label>
+                        </div>
+                    </div>
+                    <label for="cadastro-senha">Senha</label>
+                    <input type="password" id="cadastro-senha" required>
+                    <button type="submit" class="btn btn-primary">Criar Conta</button>
+                    <p>Já tem uma conta? <a href="#" id="link-login">Faça login</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <header id="main-header" style="display: none;">
+        <div class="logo">
+            <a href="#" id="home-logo-btn" class="logo-icon-link">
+                <i class="fas fa-gem"></i>
+            </a>
+        </div>
+        <nav class="main-nav">
+             <div id="nav-categorias" class="container-categorias"></div>
+            <div class="profile-container">
+                <div id="profile-btn" class="profile-btn">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop" alt="Foto de Perfil" class="profile-pic">
+                    <i class="fas fa-caret-down"></i>
+                </div>
+                <div id="profile-dropdown" class="profile-dropdown">
+                    <a href="#" class="dropdown-item" data-tab="perfil-tab"><i class="fas fa-user-circle"></i> Meu Perfil</a>
+                    <a href="#" class="dropdown-item" data-tab="promocoes-tab"><i class="fas fa-tag"></i> Promoções</a>
+                    <a href="#" class="dropdown-item" id="logout-btn-dropdown"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main-content" class="container" style="display: none;">
+
+        <section id="home-tab" class="tab-content active">
+            <h2 class="section-title">Encontre o serviço ideal para você.</h2>
+            <div id="estabelecimentos-lista"></div>
+            
+            <div class="home-grid">
+                <div class="home-info">
+                    <div id="horarios-funcionamento">
+                        <h3 class="subsection-title">Horário de Funcionamento</h3>
+                        <ul id="horarios-lista"></ul>
+                    </div>
+                    <div id="mapa-container">
+                        <h3 class="subsection-title">Localização</h3>
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="promocoes-tab" class="tab-content">
+            <h2 class="section-title">Promoções Exclusivas</h2>
+            <div id="promocoes-lista">
+                </div>
+        </section>
+
+        <section id="perfil-tab" class="tab-content">
+            <h2 class="section-title">Meu Perfil</h2>
+            <div id="perfil-info">
+                <h3>Olá, <span id="cliente-nome"></span>!</h3>
+                <p><strong>E-mail:</strong> <span id="cliente-email"></span></p>
+                <p><strong>Telefone:</strong> <span id="cliente-telefone"></span></p>
+            </div>
+
+            <div id="config-notificacoes">
+                <h3 class="subsection-title">Configurações de Notificações</h3>
+                <div class="setting-item">
+                    <span>Lembretes por E-mail</span>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span>Lembretes por SMS</span>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Próximos Agendamentos</h3>
+            <ul id="agendamentos-futuros">
+                </ul>
+
+            <h3 class="subsection-title">Histórico de Cortes</h3>
+            <ul id="historico-cortes">
+                </ul>
+        </section>
+    </main>
+
+    <div id="modal-agendamento" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-modal="modal-agendamento">×</span>
+            <div class="modal-header">
+                <i class="fas fa-calendar-check icon-main"></i>
+                <h3>Agendar Serviço</h3>
+            </div>
+            <div class="agendamento-steps">
+                <div class="progress-bar">
+                    <div id="progress-indicator" class="progress-indicator"></div>
+                </div>
+                <div class="step-nav active" data-step="1">
+                    <span class="step-number active">1</span>
+                    <span class="step-text">Serviço</span>
+                </div>
+                <div class="step-nav" data-step="2">
+                    <span class="step-number">2</span>
+                    <span class="step-text">Data & Hora</span>
+                </div>
+                <div class="step-nav" data-step="3">
+                    <span class="step-number">3</span>
+                    <span class="step-text">Confirmação</span>
+                </div>
+            </div>
+            <div class="step-content">
+                <div id="step-1" class="step-active">
+                    <p class="step-info-text">Selecione o serviço e o profissional desejados.</p>
+                    <div id="modal-servicos-lista"></div>
+                    <h4 class="subsection-title">Profissionais</h4>
+                    <div id="profissionais-lista"></div>
+                    <div class="modal-actions-agendamento">
+                        <button class="btn btn-primary" id="btn-avancar-step1">Avançar</button>
+                    </div>
+                </div>
+
+                <div id="step-2">
+                    <p class="step-info-text">Selecione o dia e o horário disponíveis.</p>
+                    <div id="calendario-container"></div>
+                    <div id="horarios-disponiveis">
+                        <p>Clique em uma data para ver os horários disponíveis.</p>
+                    </div>
+                    <div class="modal-actions-agendamento">
+                        <button class="btn btn-secondary" id="btn-voltar-step2">Voltar</button>
+                        <button class="btn btn-primary" id="btn-avancar-step2">Avançar</button>
+                    </div>
+                </div>
+
+                <div id="step-3">
+                    <p class="step-info-text">Confira os detalhes, escolha a forma de pagamento e finalize.</p>
+                    <div class="resumo-agendamento">
+                        <h4>Resumo do Agendamento</h4>
+                        <p><strong>Estabelecimento:</strong> <span id="resumo-estabelecimento"></span></p>
+                        <p><strong>Serviço:</strong> <span id="resumo-servico"></span></p>
+                        <p><strong>Profissional:</strong> <span id="resumo-profissional"></span></p>
+                        <p><strong>Data:</strong> <span id="resumo-data"></span></p>
+                        <p><strong>Hora:</strong> <span id="resumo-hora"></span></p>
+                        <p><strong>Preço:</strong> <span id="resumo-preco"></span></p>
+                        <div id="resumo-corte-ref"></div>
+                    </div>
+
+                    <div class="payment-options">
+                        <h4>Forma de Pagamento</h4>
+                        <div class="payment-choice">
+                            <label>
+                                <input type="radio" name="payment" value="estabelecimento" checked>
+                                <span><i class="fas fa-money-bill-wave"></i> Pagar no Local</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="payment" value="online">
+                                <span><i class="fas fa-credit-card"></i> Pagar Online (Pix, Cartão)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="payment-online-sim" class="payment-online-sim">
+                        <p>Simulação de pagamento online...</p>
+                        <div class="payment-buttons">
+                            <button class="btn btn-secondary">Simular Pix</button>
+                            <button class="btn btn-secondary">Simular Cartão</button>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions-agendamento">
+                        <button class="btn btn-secondary" id="btn-voltar-step3">Voltar</button>
+                        <button class="btn btn-primary" id="btn-confirmar-agendamento">Confirmar Agendamento</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-horarios-loja" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" data-modal="modal-horarios-loja">×</span>
+            <div id="horarios-modal-content"></div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification-popup"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="script-cliente.js"></script>
+</body>
+</html>
